@@ -188,8 +188,8 @@ Each bug fails only the tests that check the rule it breaks. We verified this by
 **Requirements:** macOS, Python 3.9+ and Node.js 18+. (`start.sh` uses the macOS `open` command to launch the browser.)
 
 ```bash
-git clone https://github.com/kaustubh-commits/software-testing-postman-newman.git
-cd software-testing-postman-newman
+git clone https://github.com/kaustubh-commits/Software-Testing-Postman-Newman.git
+cd Software-Testing-Postman-Newman
 ./start.sh
 ```
 
