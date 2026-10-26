@@ -421,7 +421,7 @@ def build_collection():
             "name": "Student Management API",
             "description": (
                 "Software Testing AAT: Automated API Testing with Postman and Newman.\n"
-                "Team: Kaustubh, Aayush Jalan, Utsav Adhikari (BMSCE).\n\n"
+                "Team: Kaustubh Dwivedi, Aayush Jalan, Utsav Adhikari (BMSCE).\n\n"
                 "Each folder is a test suite and starts with a `[setup] Reset data` request. "
                 "Run the Data-Driven folder with `postman/data/students.csv` as the data file."
             ),

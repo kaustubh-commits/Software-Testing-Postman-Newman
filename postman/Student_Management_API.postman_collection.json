@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "706df42a-b418-5f3e-9270-ae988ec7f006",
     "name": "Student Management API",
-    "description": "Software Testing AAT: Automated API Testing with Postman and Newman.\nTeam: Kaustubh, Aayush Jalan, Utsav Adhikari (BMSCE).\n\nEach folder is a test suite and starts with a `[setup] Reset data` request. Run the Data-Driven folder with `postman/data/students.csv` as the data file.",
+    "description": "Software Testing AAT: Automated API Testing with Postman and Newman.\nTeam: Kaustubh Dwivedi, Aayush Jalan, Utsav Adhikari (BMSCE).\n\nEach folder is a test suite and starts with a `[setup] Reset data` request. Run the Data-Driven folder with `postman/data/students.csv` as the data file.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
