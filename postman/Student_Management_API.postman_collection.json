@@ -1,0 +1,2180 @@
+{
+  "info": {
+    "_postman_id": "706df42a-b418-5f3e-9270-ae988ec7f006",
+    "name": "Student Management API",
+    "description": "Software Testing AAT: Automated API Testing with Postman and Newman.\nTeam: Kaustubh, Aayush Jalan, Utsav Adhikari (BMSCE).\n\nEach folder is a test suite and starts with a `[setup] Reset data` request. Run the Data-Driven folder with `postman/data/students.csv` as the data file.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Positive",
+      "description": "Happy path: valid requests return the right data and status codes.",
+      "item": [
+        {
+          "name": "[setup] Reset data",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reset"
+              ]
+            },
+            "description": "Restores the 3 seed students so this suite starts from a known state. Shown as a 'setup' step, not as a test.\n\n**Expected:** 200, seed data restored"
+          },
+          "response": []
+        },
+        {
+          "name": "POS-01 Health check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response time is below 500 ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "pm.test(\"API reports status ok\", function () {",
+                  "    pm.expect(pm.response.json().status).to.eql(\"ok\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "The API is up and reachable.\n\n**Expected:** 200, status is ok"
+          },
+          "response": []
+        },
+        {
+          "name": "POS-02 List all students",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response time is below 500 ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "const studentSchema = {",
+                  "    type: 'object',",
+                  "    required: ['id', 'name', 'usn', 'age', 'marks'],",
+                  "    properties: {",
+                  "        id:    { type: 'integer' },",
+                  "        name:  { type: 'string', minLength: 1, maxLength: 50 },",
+                  "        usn:   { type: 'string', pattern: '^[1-4][A-Z]{2}\\\\d{2}[A-Z]{2}\\\\d{3}$' },",
+                  "        age:   { type: 'integer', minimum: 17, maximum: 30 },",
+                  "        marks: { type: 'integer', minimum: 0, maximum: 100 }",
+                  "    }",
+                  "};",
+                  "pm.test(\"Returns an array of 3 students\", function () {",
+                  "    const list = pm.response.json();",
+                  "    pm.expect(list).to.be.an('array').with.lengthOf(3);",
+                  "});",
+                  "pm.test(\"Every student matches the schema\", function () {",
+                  "    pm.response.to.have.jsonSchema({ type: 'array', items: studentSchema });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "GET /students returns the full list.\n\n**Expected:** 200, array of 3 seed students"
+          },
+          "response": []
+        },
+        {
+          "name": "POS-03 Get student by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response time is below 500 ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "const studentSchema = {",
+                  "    type: 'object',",
+                  "    required: ['id', 'name', 'usn', 'age', 'marks'],",
+                  "    properties: {",
+                  "        id:    { type: 'integer' },",
+                  "        name:  { type: 'string', minLength: 1, maxLength: 50 },",
+                  "        usn:   { type: 'string', pattern: '^[1-4][A-Z]{2}\\\\d{2}[A-Z]{2}\\\\d{3}$' },",
+                  "        age:   { type: 'integer', minimum: 17, maximum: 30 },",
+                  "        marks: { type: 'integer', minimum: 0, maximum: 100 }",
+                  "    }",
+                  "};",
+                  "pm.test(\"Body matches the Student JSON schema\", function () {",
+                  "    pm.response.to.have.jsonSchema(studentSchema);",
+                  "});",
+                  "pm.test(\"Returns the right student\", function () {",
+                  "    const s = pm.response.json();",
+                  "    pm.expect(s.id).to.eql(1);",
+                  "    pm.expect(s.name).to.eql(\"Aayush Jalan\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "1"
+              ]
+            },
+            "description": "GET /students/{id} returns one student.\n\n**Expected:** 200, student 1 is Aayush Jalan"
+          },
+          "response": []
+        },
+        {
+          "name": "POS-04 Create a valid student",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Pre-request script: build a unique USN so this test never hits a duplicate",
+                  "const n = Math.floor(Math.random() * 900) + 100;   // 100-999",
+                  "pm.variables.set(\"randomUsn\", \"1BM23AD\" + n);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Response time is below 500 ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "const studentSchema = {",
+                  "    type: 'object',",
+                  "    required: ['id', 'name', 'usn', 'age', 'marks'],",
+                  "    properties: {",
+                  "        id:    { type: 'integer' },",
+                  "        name:  { type: 'string', minLength: 1, maxLength: 50 },",
+                  "        usn:   { type: 'string', pattern: '^[1-4][A-Z]{2}\\\\d{2}[A-Z]{2}\\\\d{3}$' },",
+                  "        age:   { type: 'integer', minimum: 17, maximum: 30 },",
+                  "        marks: { type: 'integer', minimum: 0, maximum: 100 }",
+                  "    }",
+                  "};",
+                  "pm.test(\"Body matches the Student JSON schema\", function () {",
+                  "    pm.response.to.have.jsonSchema(studentSchema);",
+                  "});",
+                  "pm.test(\"Body echoes the submitted data\", function () {",
+                  "    const s = pm.response.json();",
+                  "    pm.expect(s.name).to.eql(\"Riya Sharma\");",
+                  "    pm.expect(s.usn).to.eql(pm.variables.get(\"randomUsn\"));",
+                  "    pm.expect(s.age).to.eql(19);",
+                  "    pm.expect(s.marks).to.eql(87);",
+                  "});",
+                  "pm.test(\"A new id was assigned\", function () {",
+                  "    pm.expect(pm.response.json().id).to.be.above(3);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "POST /students with valid data and a valid token.\n\n**Expected:** 201 Created, body echoes data with a new id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Riya Sharma\",\n    \"usn\": \"{{randomUsn}}\",\n    \"age\": 19,\n    \"marks\": 87\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POS-05 Update a student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response time is below 500 ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "pm.test(\"Body echoes the submitted data\", function () {",
+                  "    const s = pm.response.json();",
+                  "    pm.expect(s.name).to.eql(\"Utsav Adhikari\");",
+                  "    pm.expect(s.usn).to.eql(\"1BM23AD002\");",
+                  "    pm.expect(s.age).to.eql(21);",
+                  "    pm.expect(s.marks).to.eql(95);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "2"
+              ]
+            },
+            "description": "PUT /students/{id} replaces the student's data.\n\n**Expected:** 200, marks updated to 95",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Utsav Adhikari\",\n    \"usn\": \"1BM23AD002\",\n    \"age\": 21,\n    \"marks\": 95\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POS-06 Delete a student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response time is below 500 ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "pm.test(\"Confirms the deletion\", function () {",
+                  "    pm.expect(pm.response.json().message).to.include(\"deleted\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students/3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "3"
+              ]
+            },
+            "description": "DELETE /students/{id} removes the student.\n\n**Expected:** 200, deletion message"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Negative",
+      "description": "Invalid ids, duplicates and bad data are rejected with the right errors.",
+      "item": [
+        {
+          "name": "[setup] Reset data",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reset"
+              ]
+            },
+            "description": "Restores the 3 seed students so this suite starts from a known state. Shown as a 'setup' step, not as a test.\n\n**Expected:** 200, seed data restored"
+          },
+          "response": []
+        },
+        {
+          "name": "NEG-01 Get a non-existent student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Response time is below 500 ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "pm.test(\"Error message mentions \\\"not found\\\"\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.include(\"not found\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "9999"
+              ]
+            },
+            "description": "Unknown ids return 404.\n\n**Expected:** 404 Not Found"
+          },
+          "response": []
+        },
+        {
+          "name": "NEG-02 Update a non-existent student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Error message mentions \\\"not found\\\"\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.include(\"not found\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students/9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "9999"
+              ]
+            },
+            "description": "PUT on an unknown id returns 404.\n\n**Expected:** 404 Not Found",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD300\",\n    \"age\": 20,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "NEG-03 Delete a non-existent student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Error message mentions \\\"not found\\\"\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.include(\"not found\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students/9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "9999"
+              ]
+            },
+            "description": "DELETE on an unknown id returns 404.\n\n**Expected:** 404 Not Found"
+          },
+          "response": []
+        },
+        {
+          "name": "NEG-04 Create with a duplicate USN",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409 Conflict\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test(\"Error message mentions \\\"already exists\\\"\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.include(\"already exists\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "1BM23AD001 already belongs to a seed student.\n\n**Expected:** 409 Conflict",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD001\",\n    \"age\": 20,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "NEG-05 Create with an invalid USN format",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test(\"Validation error points at the 'usn' field\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql(\"Validation failed\");",
+                  "    const fields = body.errors.map(e => e.field);",
+                  "    pm.expect(fields).to.include(\"usn\");",
+                  "});",
+                  "pm.test(\"No student was created (no id in body)\", function () {",
+                  "    pm.expect(pm.response.json()).to.not.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "USN must look like 1BM23AD028.\n\n**Expected:** 422, error on 'usn'",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"ABC123\",\n    \"age\": 20,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "NEG-06 Create with a missing field",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test(\"Validation error points at the 'marks' field\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql(\"Validation failed\");",
+                  "    const fields = body.errors.map(e => e.field);",
+                  "    pm.expect(fields).to.include(\"marks\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "All four fields are required.\n\n**Expected:** 422, error on 'marks'",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"No Marks\",\n    \"usn\": \"1BM23AD301\",\n    \"age\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "NEG-07 Create with a wrong data type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test(\"Validation error points at the 'age' field\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql(\"Validation failed\");",
+                  "    const fields = body.errors.map(e => e.field);",
+                  "    pm.expect(fields).to.include(\"age\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "age must be an integer.\n\n**Expected:** 422, error on 'age'",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Wrong Type\",\n    \"usn\": \"1BM23AD302\",\n    \"age\": \"twenty\",\n    \"marks\": 70\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "NEG-08 Non-numeric id in the URL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test(\"Validation error points at the 'student_id' field\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql(\"Validation failed\");",
+                  "    const fields = body.errors.map(e => e.field);",
+                  "    pm.expect(fields).to.include(\"student_id\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "abc"
+              ]
+            },
+            "description": "Path ids must be integers.\n\n**Expected:** 422, error on 'student_id'"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Boundary",
+      "description": "Boundary Value Analysis: values just inside and just outside each limit.",
+      "item": [
+        {
+          "name": "[setup] Reset data",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reset"
+              ]
+            },
+            "description": "Restores the 3 seed students so this suite starts from a known state. Shown as a 'setup' step, not as a test.\n\n**Expected:** 200, seed data restored"
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-01 Age 16 (below minimum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test(\"Validation error points at the 'age' field\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql(\"Validation failed\");",
+                  "    const fields = body.errors.map(e => e.field);",
+                  "    pm.expect(fields).to.include(\"age\");",
+                  "});",
+                  "pm.test(\"No student was created (no id in body)\", function () {",
+                  "    pm.expect(pm.response.json()).to.not.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: age = 16. Just outside the valid range.\n\n**Expected:** 422, error on 'age'",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD101\",\n    \"age\": 16,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-02 Age 17 (minimum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Body echoes the submitted data\", function () {",
+                  "    const s = pm.response.json();",
+                  "    pm.expect(s.age).to.eql(17);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: age = 17. On the edge but inside the valid range.\n\n**Expected:** 201 Created",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD102\",\n    \"age\": 17,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-03 Age 30 (maximum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Body echoes the submitted data\", function () {",
+                  "    const s = pm.response.json();",
+                  "    pm.expect(s.age).to.eql(30);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: age = 30. On the edge but inside the valid range.\n\n**Expected:** 201 Created",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD103\",\n    \"age\": 30,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-04 Age 31 (above maximum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test(\"Validation error points at the 'age' field\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql(\"Validation failed\");",
+                  "    const fields = body.errors.map(e => e.field);",
+                  "    pm.expect(fields).to.include(\"age\");",
+                  "});",
+                  "pm.test(\"No student was created (no id in body)\", function () {",
+                  "    pm.expect(pm.response.json()).to.not.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: age = 31. Just outside the valid range.\n\n**Expected:** 422, error on 'age'",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD104\",\n    \"age\": 31,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-05 Marks -1 (below minimum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test(\"Validation error points at the 'marks' field\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql(\"Validation failed\");",
+                  "    const fields = body.errors.map(e => e.field);",
+                  "    pm.expect(fields).to.include(\"marks\");",
+                  "});",
+                  "pm.test(\"No student was created (no id in body)\", function () {",
+                  "    pm.expect(pm.response.json()).to.not.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: marks = -1. Just outside the valid range.\n\n**Expected:** 422, error on 'marks'",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD105\",\n    \"age\": 20,\n    \"marks\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-06 Marks 0 (minimum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Body echoes the submitted data\", function () {",
+                  "    const s = pm.response.json();",
+                  "    pm.expect(s.marks).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: marks = 0. On the edge but inside the valid range.\n\n**Expected:** 201 Created",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD106\",\n    \"age\": 20,\n    \"marks\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-07 Marks 100 (maximum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Body echoes the submitted data\", function () {",
+                  "    const s = pm.response.json();",
+                  "    pm.expect(s.marks).to.eql(100);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: marks = 100. On the edge but inside the valid range.\n\n**Expected:** 201 Created",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD107\",\n    \"age\": 20,\n    \"marks\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-08 Marks 101 (above maximum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test(\"Validation error points at the 'marks' field\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql(\"Validation failed\");",
+                  "    const fields = body.errors.map(e => e.field);",
+                  "    pm.expect(fields).to.include(\"marks\");",
+                  "});",
+                  "pm.test(\"No student was created (no id in body)\", function () {",
+                  "    pm.expect(pm.response.json()).to.not.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: marks = 101. Just outside the valid range.\n\n**Expected:** 422, error on 'marks'",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD108\",\n    \"age\": 20,\n    \"marks\": 101\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-09 Name 0 chars (empty)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test(\"Validation error points at the 'name' field\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql(\"Validation failed\");",
+                  "    const fields = body.errors.map(e => e.field);",
+                  "    pm.expect(fields).to.include(\"name\");",
+                  "});",
+                  "pm.test(\"No student was created (no id in body)\", function () {",
+                  "    pm.expect(pm.response.json()).to.not.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: name = \"\" (0 chars). Just outside the valid range.\n\n**Expected:** 422, error on 'name'",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"\",\n    \"usn\": \"1BM23AD109\",\n    \"age\": 20,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-10 Name 1 char (minimum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Body echoes the submitted data\", function () {",
+                  "    const s = pm.response.json();",
+                  "    pm.expect(s.name).to.eql(\"A\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: name = \"A\" (1 chars). On the edge but inside the valid range.\n\n**Expected:** 201 Created",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"A\",\n    \"usn\": \"1BM23AD110\",\n    \"age\": 20,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-11 Name 50 chars (maximum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Body echoes the submitted data\", function () {",
+                  "    const s = pm.response.json();",
+                  "    pm.expect(s.name).to.eql(\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: name = \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\" (50 chars). On the edge but inside the valid range.\n\n**Expected:** 201 Created",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\n    \"usn\": \"1BM23AD111\",\n    \"age\": 20,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BVA-12 Name 51 chars (above maximum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test(\"Validation error points at the 'name' field\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql(\"Validation failed\");",
+                  "    const fields = body.errors.map(e => e.field);",
+                  "    pm.expect(fields).to.include(\"name\");",
+                  "});",
+                  "pm.test(\"No student was created (no id in body)\", function () {",
+                  "    pm.expect(pm.response.json()).to.not.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Boundary value: name = \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\" (51 chars). Just outside the valid range.\n\n**Expected:** 422, error on 'name'",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\n    \"usn\": \"1BM23AD112\",\n    \"age\": 20,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "description": "Bearer-token security: 401 when missing, 403 when wrong.",
+      "item": [
+        {
+          "name": "[setup] Reset data",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reset"
+              ]
+            },
+            "description": "Restores the 3 seed students so this suite starts from a known state. Shown as a 'setup' step, not as a test.\n\n**Expected:** 200, seed data restored"
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-01 Create without a token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test(\"Error message mentions \\\"Missing bearer token\\\"\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.include(\"Missing bearer token\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "No Authorization header at all.\n\n**Expected:** 401 Unauthorized",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD401\",\n    \"age\": 20,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-02 Create with a wrong token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Error message mentions \\\"Invalid token\\\"\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.include(\"Invalid token\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{wrongToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Header present but the token is wrong.\n\n**Expected:** 403 Forbidden",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD402\",\n    \"age\": 20,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-03 Update without a token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test(\"Error message mentions \\\"Missing bearer token\\\"\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.include(\"Missing bearer token\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "1"
+              ]
+            },
+            "description": "PUT is protected too.\n\n**Expected:** 401 Unauthorized",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD001\",\n    \"age\": 20,\n    \"marks\": 75\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-04 Delete with a wrong token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Error message mentions \\\"Invalid token\\\"\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.include(\"Invalid token\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{wrongToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "1"
+              ]
+            },
+            "description": "DELETE is protected too.\n\n**Expected:** 403 Forbidden"
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-05 Delete with a valid token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students/3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "3"
+              ]
+            },
+            "description": "The right token is accepted.\n\n**Expected:** 200 OK"
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-06 Read endpoints are public",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response time is below 500 ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "GET does not need a token.\n\n**Expected:** 200 OK without a token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chaining",
+      "description": "Request chaining: create, then reuse the saved id to read, update and delete.",
+      "item": [
+        {
+          "name": "[setup] Reset data",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reset"
+              ]
+            },
+            "description": "Restores the 3 seed students so this suite starts from a known state. Shown as a 'setup' step, not as a test.\n\n**Expected:** 200, seed data restored"
+          },
+          "response": []
+        },
+        {
+          "name": "CHN-01 Create a student and save its id",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Pre-request script: unique USN for this chain",
+                  "pm.variables.set(\"chainUsn\", \"1BM23CS\" + (Math.floor(Math.random() * 900) + 100));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "// Save values from this response for the next requests",
+                  "const s = pm.response.json();",
+                  "pm.environment.set(\"createdId\", s.id);",
+                  "pm.environment.set(\"createdUsn\", s.usn);",
+                  "pm.test(\"Saved createdId = \" + s.id + \" for the next requests\", function () {",
+                  "    pm.expect(pm.environment.get(\"createdId\")).to.eql(s.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "Step 1: create and remember the new id.\n\n**Expected:** 201, id saved to environment as createdId",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Chain Student\",\n    \"usn\": \"{{chainUsn}}\",\n    \"age\": 22,\n    \"marks\": 70\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CHN-02 Fetch the created student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const studentSchema = {",
+                  "    type: 'object',",
+                  "    required: ['id', 'name', 'usn', 'age', 'marks'],",
+                  "    properties: {",
+                  "        id:    { type: 'integer' },",
+                  "        name:  { type: 'string', minLength: 1, maxLength: 50 },",
+                  "        usn:   { type: 'string', pattern: '^[1-4][A-Z]{2}\\\\d{2}[A-Z]{2}\\\\d{3}$' },",
+                  "        age:   { type: 'integer', minimum: 17, maximum: 30 },",
+                  "        marks: { type: 'integer', minimum: 0, maximum: 100 }",
+                  "    }",
+                  "};",
+                  "pm.test(\"Body matches the Student JSON schema\", function () {",
+                  "    pm.response.to.have.jsonSchema(studentSchema);",
+                  "});",
+                  "pm.test(\"Same student that CHN-01 created\", function () {",
+                  "    pm.expect(pm.response.json().usn).to.eql(pm.environment.get(\"createdUsn\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "{{createdId}}"
+              ]
+            },
+            "description": "Step 2: reuse {{createdId}} in the URL.\n\n**Expected:** 200, same USN as created"
+          },
+          "response": []
+        },
+        {
+          "name": "CHN-03 Update the created student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Marks updated to 99\", function () {",
+                  "    pm.expect(pm.response.json().marks).to.eql(99);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "{{createdId}}"
+              ]
+            },
+            "description": "Step 3: update it.\n\n**Expected:** 200, marks now 99",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Chain Student\",\n    \"usn\": \"{{createdUsn}}\",\n    \"age\": 22,\n    \"marks\": 99\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CHN-04 Verify the update persisted",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Update was saved on the server\", function () {",
+                  "    pm.expect(pm.response.json().marks).to.eql(99);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "{{createdId}}"
+              ]
+            },
+            "description": "Step 4: read it back.\n\n**Expected:** 200, marks still 99"
+          },
+          "response": []
+        },
+        {
+          "name": "CHN-05 Delete the created student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "{{createdId}}"
+              ]
+            },
+            "description": "Step 5: delete it.\n\n**Expected:** 200 OK"
+          },
+          "response": []
+        },
+        {
+          "name": "CHN-06 Confirm it is gone",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Error message mentions \\\"not found\\\"\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.include(\"not found\");",
+                  "});",
+                  "// Clean up the environment at the end of the chain",
+                  "pm.environment.unset(\"createdId\");",
+                  "pm.environment.unset(\"createdUsn\");"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "{{createdId}}"
+              ]
+            },
+            "description": "Step 6: the deleted student no longer exists.\n\n**Expected:** 404 Not Found"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Data-Driven",
+      "description": "One request run once per row of students.csv (15 rows).",
+      "item": [
+        {
+          "name": "[setup] Reset data",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Data-driven runs repeat the whole folder once per CSV row.",
+                  "// Reset only before the first row; later rows skip this request.",
+                  "if (pm.info.iteration > 0) {",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reset"
+              ]
+            },
+            "description": "Restores the 3 seed students so this suite starts from a known state. Shown as a 'setup' step, not as a test.\n\n**Expected:** 200, seed data restored"
+          },
+          "response": []
+        },
+        {
+          "name": "Create student from CSV row",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Each iteration gets one row of students.csv via pm.iterationData",
+                  "if (!pm.iterationData.has('case_id')) {",
+                  "    pm.test.skip(\"Run this folder with students.csv as the data file\", function () {});",
+                  "} else {",
+                  "    const caseId   = pm.iterationData.get('case_id');",
+                  "    const scenario = pm.iterationData.get('scenario');",
+                  "    const expected = Number(pm.iterationData.get('expected_status'));",
+                  "    pm.test(caseId + ' ' + scenario + ': expect ' + expected, function () {",
+                  "        pm.response.to.have.status(expected);",
+                  "    });",
+                  "    if (expected === 201) {",
+                  "        pm.test(\"Body echoes the USN from the CSV row\", function () {",
+                  "            pm.expect(pm.response.json().usn).to.eql(pm.iterationData.get('usn'));",
+                  "        });",
+                  "    } else {",
+                  "        pm.test(\"No student was created\", function () {",
+                  "            pm.expect(pm.response.json()).to.not.have.property('id');",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "One request, many inputs: Newman runs it once per CSV row (-d students.csv).\n\n**Expected:** {{expected_status}} (from students.csv)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"{{name}}\",\n    \"usn\": \"{{usn}}\",\n    \"age\": {{age}},\n    \"marks\": {{marks}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "token",
+      "value": "demo-token-123"
+    },
+    {
+      "key": "wrongToken",
+      "value": "not-the-right-token"
+    }
+  ]
+}

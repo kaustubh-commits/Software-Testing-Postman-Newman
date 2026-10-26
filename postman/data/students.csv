@@ -1,0 +1,16 @@
+case_id,scenario,name,usn,age,marks,expected_status
+DD-01,Typical valid student,Riya Sharma,1BM23AD201,19,75,201
+DD-02,Minimum age (17),Arjun Rao,1BM23AD202,17,60,201
+DD-03,Maximum age (30),Meera Iyer,1BM23AD203,30,82,201
+DD-04,Zero marks,Kiran Das,1BM23AD204,22,0,201
+DD-05,Full marks,Neha Gupta,1BM23AD205,21,100,201
+DD-06,Single-letter name,X,1BM23AD206,20,50,201
+DD-07,Different branch code,Rahul Nair,1BM22CS207,23,68,201
+DD-08,Age too low (16),Ananya Bose,1BM23AD208,16,70,422
+DD-09,Age too high (31),Vikram Singh,1BM23AD209,31,70,422
+DD-10,Negative marks,Pooja Menon,1BM23AD210,20,-5,422
+DD-11,Marks above 100,Sahil Khan,1BM23AD211,20,101,422
+DD-12,Empty name,,1BM23AD212,20,70,422
+DD-13,Lowercase USN,Divya Pillai,1bm23ad213,20,70,422
+DD-14,USN in wrong format,Rohan Joshi,BM23AD214,20,70,422
+DD-15,Duplicate USN (seed student),Aditi Rao,1BM23AD001,20,70,409

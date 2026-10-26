@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Newman Test Control Center</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23FF6C37'/%3E%3Cpath d='M10 16.5l4 4 8-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css">
+  <!-- Apply the saved theme before first paint (no flash) -->
+  <script>
+    try {
+      const t = localStorage.getItem('theme');
+      if (t) document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
+</head>
+<body>
+
+<!-- ============================ HEADER ============================ -->
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15"/><path d="M10 16.5l4 4 8-9"/></svg>
+    </div>
+    <div>
+      <h1>Automated API Testing <span class="muted">with</span> Postman &amp; Newman</h1>
+      <p class="team">Software Testing AAT · BMSCE · Kaustubh · Aayush Jalan · Utsav Adhikari</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <span id="apiStatus" class="status-pill" title="Polls GET /health every 3 seconds">
+      <span class="dot"></span><span class="label">Checking API…</span>
+    </span>
+    <a class="btn ghost" href="/docs" target="_blank" rel="noopener">Swagger /docs</a>
+    <button id="reportBtn" class="btn ghost" disabled title="Opens the index of the latest run's htmlextra reports">HTML report</button>
+    <button id="themeBtn" class="btn icon" aria-label="Toggle dark / light theme" title="Toggle dark / light">
+      <svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- Shown only while bug mode is on -->
+<div id="bugBanner" class="bug-banner" hidden>
+  <strong>⚠ BUG MODE IS ON</strong>
+  <span id="bugBannerText"></span>
+  <span class="muted-inv">Run the suites and watch the tests catch it.</span>
+</div>
+
+<main class="layout">
+
+  <!-- ============================ LEFT: CONTROLS ============================ -->
+  <aside class="controls">
+    <button id="runAllBtn" class="btn primary run-all">
+      <svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z"/></svg>
+      <span>Run All Suites</span>
+    </button>
+
+    <div class="pace" role="group" aria-label="Run pace">
+      <span class="pace-label">Pace</span>
+      <button class="seg active" data-pace="250" title="Pause 250 ms between requests so the audience can follow">Presenter</button>
+      <button class="seg" data-pace="0" title="Full speed">Full speed</button>
+    </div>
+
+    <section id="bugCard" class="card bug-card">
+      <div class="bug-head">
+        <div>
+          <h2>Bug Mode</h2>
+          <p class="muted small">Plant a real defect in the API at runtime</p>
+        </div>
+        <label class="switch" title="Toggle bug mode">
+          <input id="bugToggle" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <select id="bugType" aria-label="Which bug to plant"></select>
+    </section>
+
+    <h2 class="section-label">Test suites <span class="muted">(Postman folders)</span></h2>
+    <div id="suiteList" class="suite-list"><!-- filled by app.js --></div>
+  </aside>
+
+  <!-- ============================ RIGHT: RESULTS ============================ -->
+  <section class="results">
+
+    <!-- How it works: the Newman pipeline -->
+    <section class="card pipeline-card">
+      <div class="card-head">
+        <h2>How it works <span class="muted">· what Newman does for every request</span></h2>
+        <span id="runState" class="run-state">Idle</span>
+      </div>
+      <ol id="pipeline" class="pipeline">
+        <li data-step="request"><span class="node">1</span><b>Request</b><small>Newman takes the next request from the collection</small></li>
+        <li data-step="prerequest"><span class="node">2</span><b>Pre-request script</b><small>JS that runs first, e.g. make a unique USN</small></li>
+        <li data-step="api"><span class="node">3</span><b>API call</b><small>HTTP request sent to the FastAPI server</small></li>
+        <li data-step="response"><span class="node">4</span><b>Response</b><small>Status, headers, body and time come back</small></li>
+        <li data-step="tests"><span class="node">5</span><b>Test scripts</b><small>pm.test() assertions check the response</small></li>
+        <li data-step="report"><span class="node">6</span><b>Report</b><small>Results go to the CLI, htmlextra and this page</small></li>
+      </ol>
+      <p id="pipeCaption" class="pipe-caption">Press <b>Run</b> on a suite to watch each step light up.</p>
+      <div class="progress"><div id="progressBar"></div></div>
+    </section>
+
+    <!-- Summary -->
+    <section class="stats">
+      <div class="card stat donut-card">
+        <div class="donut-wrap">
+          <canvas id="donut" width="120" height="120" aria-label="Pass / fail donut chart"></canvas>
+          <div class="donut-center"><b id="passRate">-</b><small>pass rate</small></div>
+        </div>
+      </div>
+      <div class="card stat pass"><small>Passed</small><b id="statPassed">0</b><span class="sub" id="statPassedSub">test cases</span></div>
+      <div class="card stat fail"><small>Failed</small><b id="statFailed">0</b><span class="sub" id="statFailedSub">test cases</span></div>
+      <div class="card stat"><small>Total</small><b id="statTotal">0</b><span class="sub" id="statAssert">0 assertions</span></div>
+      <div class="card stat"><small>Duration</small><b id="statTime">-</b><span class="sub" id="statAvg">avg response -</span></div>
+    </section>
+
+    <!-- Live feed + response-time chart -->
+    <section class="live-row">
+      <section class="card feed-card">
+        <div class="card-head">
+          <h2>Live results <span class="muted">· click a test to inspect it</span></h2>
+          <label class="check"><input id="onlyFails" type="checkbox"> Failures only</label>
+        </div>
+        <div id="feed" class="feed" aria-live="polite">
+          <div class="empty">No results yet. Run a suite and results stream in here one by one.</div>
+        </div>
+      </section>
+      <section class="card chart-card">
+        <div class="card-head"><h2>Response time <span class="muted">(ms)</span></h2></div>
+        <div class="chart-box"><canvas id="timeChart" aria-label="Response time per test"></canvas></div>
+      </section>
+    </section>
+
+    <!-- Test case table -->
+    <section class="card">
+      <div class="card-head">
+        <h2>Test case table <span class="muted" id="tableMeta">· latest run</span></h2>
+        <div class="head-actions">
+          <div class="filters" role="group" aria-label="Filter test cases">
+            <button class="seg active" data-filter="all">All</button>
+            <button class="seg" data-filter="pass">Passed</button>
+            <button class="seg" data-filter="fail">Failed</button>
+          </div>
+          <button id="csvBtn" class="btn ghost" disabled>Export CSV</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="cases">
+          <thead><tr><th>ID</th><th>Type</th><th>Test case</th><th>Input</th><th>Expected</th><th>Actual</th><th>Result</th></tr></thead>
+          <tbody id="caseBody"><tr><td colspan="7" class="empty">The table fills in from the latest run.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- History + architecture -->
+    <section class="bottom-row">
+      <section class="card">
+        <div class="card-head"><h2>Run history</h2></div>
+        <ul id="history" class="history"><li class="empty">No runs yet.</li></ul>
+      </section>
+      <section class="card arch">
+        <div class="card-head"><h2>Under the hood</h2></div>
+        <div class="arch-flow">
+          <div class="arch-box"><b>Browser</b><small>this page</small></div>
+          <div class="arch-arrow"><span>POST /control/run</span><span>⇠ SSE events</span></div>
+          <div class="arch-box"><b>FastAPI</b><small>control_center.py</small></div>
+          <div class="arch-arrow"><span>spawns</span><span>⇠ JSON lines</span></div>
+          <div class="arch-box accent"><b>Newman</b><small>run_newman.js</small></div>
+          <div class="arch-arrow"><span>HTTP requests</span><span>⇠ responses</span></div>
+          <div class="arch-box"><b>Student API</b><small>student_api.py</small></div>
+        </div>
+        <p class="muted small">The same collection runs in the Postman app, in this dashboard (Newman library) and from the terminal or a CI pipeline (<code>newman run</code>).</p>
+      </section>
+    </section>
+  </section>
+</main>
+
+<!-- ============================ DETAIL DRAWER ============================ -->
+<div id="drawerBackdrop" class="backdrop" hidden></div>
+<aside id="drawer" class="drawer" aria-hidden="true" aria-label="Test details">
+  <div class="drawer-head">
+    <div>
+      <div id="dMeta" class="d-meta"></div>
+      <h2 id="dTitle"></h2>
+    </div>
+    <button id="drawerClose" class="btn icon" aria-label="Close details">✕</button>
+  </div>
+  <div id="dBody" class="drawer-body"></div>
+</aside>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script src="/vendor/chartjs/chart.umd.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

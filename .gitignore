@@ -1,0 +1,15 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Generated test reports (recreated on every run)
+reports/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
