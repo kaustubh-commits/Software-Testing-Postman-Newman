@@ -1,15 +1,31 @@
 #!/usr/bin/env bash
 # run_bug_demo.sh - BACKUP of the "bug mode" demo, from the terminal:
 #   1. plants a bug in the running API (default: marks above 100 are accepted)
-#   2. runs the Boundary suite, where the BVA-08 "Marks 101" test should FAIL
+#   2. runs the suite(s) that should catch it, where some tests should FAIL
 #   3. switches bug mode off again (always, even if you press Ctrl+C)
 #
-#   ./run_bug_demo.sh                 # marks_over_100 bug, Boundary suite
-#   ./run_bug_demo.sh wrong_status    # POST returns 200 instead of 201
+#   ./run_bug_demo.sh                 # marks_over_100 → Boundary (BVA-08 fails)
+#   ./run_bug_demo.sh wrong_status    # POST returns 200 instead of 201 → Positive
+#   ./run_bug_demo.sh auth_bypass     # wrong token accepted → Auth
+#   ./run_bug_demo.sh name_length     # names over 50 chars accepted → Boundary
+#   ./run_bug_demo.sh duplicate_usn   # duplicate USN allowed → Negative
+#   ./run_bug_demo.sh slow_response   # GET /students takes 800 ms → Positive
+#   ./run_bug_demo.sh wrong_body      # GET by id renames "age" → Positive
+#   ./run_bug_demo.sh all             # every bug at once → all suites
 source "$(dirname "$0")/scripts/common.sh"
 ensure_deps
 cd "$ROOT"
 BUG="${1:-marks_over_100}"
+
+# Which suite(s) catch which bug
+case "$BUG" in
+  marks_over_100|name_length) SUITES=(Boundary) ;;
+  wrong_status|slow_response|wrong_body) SUITES=(Positive) ;;
+  auth_bypass)   SUITES=(Auth) ;;
+  duplicate_usn) SUITES=(Negative) ;;
+  all)           SUITES=() ;;               # empty = run_tests.sh runs every suite
+  *) fail "Unknown bug '$BUG'"; exit 1 ;;
+esac
 
 if PORT=$(find_running_app); then
   info "Using the server already running on port $PORT"
@@ -28,8 +44,8 @@ trap cleanup EXIT
 
 set_bug true
 printf "\n\033[1;31m⚠  BUG MODE ON:\033[0m %s\n" "$BUG"
-info "Running the Boundary suite. Expect at least one test to FAIL."
-"$ROOT/run_tests.sh" Boundary
+info "Running: ${SUITES[*]:-all suites}. Expect at least one test to FAIL."
+"$ROOT/run_tests.sh" "${SUITES[@]}"
 CODE=$?
 echo
 if [ $CODE -ne 0 ]; then

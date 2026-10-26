@@ -276,6 +276,12 @@ function addSetupRow(r) {
   appendFeed(`<div class="setup-row">setup · ${esc(r.method)} ${esc(r.path)} · reset seed data · ${r.time ?? '-'} ms</div>`);
 }
 
+/** Purple badge for error scenarios: invalid input that the API should reject. */
+const INVALID_TIP = 'Error scenario: this test sends invalid input on purpose and PASSES when the API correctly rejects it';
+function invalidBadge(r) {
+  return r.invalidInput ? `<span class="badge-invalid" title="${INVALID_TIP}">Invalid input → rejected</span>` : '';
+}
+
 function rowHtml(r, i) {
   const failed = r.assertions.filter((a) => !a.passed && !a.skipped);
   const status = r.code ? `${r.code} ${esc(r.status)}` : 'no response';
@@ -286,8 +292,8 @@ function rowHtml(r, i) {
       <div class="what">
         <div class="title"><span class="id">${esc(r.caseId)}</span>${esc(r.title)}</div>
         ${failed.length
-          ? `<div class="err">✗ ${esc(failed[0].name)}: ${esc(failed[0].error)}</div>`
-          : `<div class="endpoint">${esc(r.path)} → ${status}</div>`}
+          ? `<div class="err">${invalidBadge(r)}✗ ${esc(failed[0].name)}: ${esc(failed[0].error)}</div>`
+          : `<div class="endpoint">${invalidBadge(r)}${esc(r.path)} → ${status}</div>`}
       </div>
       <span class="ms">${r.time ?? '-'} ms<small>${r.assertions.length} checks</small></span>
     </div>`;
@@ -460,7 +466,7 @@ function tableRowHtml(r, i) {
     <tr class="${r.passed ? 'pass' : 'fail'}" data-i="${i}">
       <td class="id">${esc(r.caseId)}</td>
       <td><span class="tag">${esc(r.suite)}</span></td>
-      <td>${esc(r.title)}</td>
+      <td>${esc(r.title)}${r.invalidInput ? `<div class="cell-badge">${invalidBadge(r)}</div>` : ''}</td>
       <td class="input" title="${esc(input)}">${esc(shortInput)}</td>
       <td>${esc(r.expected)}</td>
       <td class="actual">${esc(r.actual)}</td>
@@ -498,9 +504,10 @@ $$('.filters .seg').forEach((btn) => btn.addEventListener('click', () => {
 /** Download the test case table as a CSV file. */
 $('#csvBtn').addEventListener('click', () => {
   const quote = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const lines = [['ID', 'Type', 'Test case', 'Input', 'Expected', 'Actual', 'Pass/Fail'].join(',')];
+  const lines = [['ID', 'Type', 'Scenario', 'Test case', 'Input', 'Expected', 'Actual', 'Pass/Fail'].join(',')];
   state.results.forEach((r) => lines.push([
-    r.caseId, r.suite, r.title, inputText(r), r.expected, r.actual, r.passed ? 'PASS' : 'FAIL',
+    r.caseId, r.suite, r.invalidInput ? 'Invalid input -> rejected' : 'Valid input',
+    r.title, inputText(r), r.expected, r.actual, r.passed ? 'PASS' : 'FAIL',
   ].map(quote).join(',')));
   const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/csv' });
   const a = document.createElement('a');
@@ -538,6 +545,7 @@ function openDrawer(r) {
     <span class="pill ${r.passed ? 'pass' : 'fail'}">${r.passed ? 'PASS' : 'FAIL'}</span>
     <span class="tag">${esc(r.suite)}</span>
     <span class="tag">${esc(r.caseId)}</span>
+    ${invalidBadge(r)}
     ${r.iterations > 1 ? `<span class="tag">CSV row ${r.iteration} of ${r.iterations}</span>` : ''}`;
   $('#dTitle').textContent = r.title;
 
@@ -555,6 +563,8 @@ function openDrawer(r) {
       </div>
     </div>
     ${r.description ? `<div class="d-section"><h3>What this test checks</h3><div>${esc(r.description.replace(/\*\*Expected:\*\*.*$/s, '').trim())}</div></div>` : ''}
+    ${r.invalidInput ? `<div class="d-section invalid-note"><b>Error scenario.</b> This request is invalid on purpose.
+      ${r.passed ? 'It PASSES because the API correctly rejected it.' : 'It FAILS because the API accepted it or rejected it the wrong way. That is a bug.'}</div>` : ''}
     <div class="d-section">
       <h3>Request</h3>
       <div class="reqline"><span class="method ${esc(r.method)}">${esc(r.method)}</span> ${esc(r.url)}</div>
@@ -615,6 +625,8 @@ function renderBug() {
   document.body.classList.toggle('bug-on', enabled);
   $('#bugBanner').hidden = !enabled;
   $('#bugBannerText').textContent = types[type] || '';
+  const caught = (state.bug.caughtBy || {})[type];
+  $('#bugHint').innerHTML = caught ? `Caught by: <b>${esc(caught)}</b>` : '';
 }
 
 async function setBug(enabled, type) {

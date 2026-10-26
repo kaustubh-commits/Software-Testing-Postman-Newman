@@ -20,6 +20,8 @@
   --fail-bg: #fde2e2;
   --warn-bg: #b42318;
   --get: #1f6feb; --post: #1a7f37; --put: #9a6700; --delete: #cf222e;
+  --invalid: #7c3aed;           /* purple: "invalid input → rejected" (error scenarios) */
+  --invalid-bg: #efe7fe;
   --code-bg: #0f141b;
   --code-text: #e6edf3;
   --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 4px 16px rgba(16, 24, 40, .06);
@@ -38,6 +40,7 @@
     --pass: #3fb950; --pass-bg: rgba(63, 185, 80, .16);
     --fail: #ff6b63; --fail-bg: rgba(248, 81, 73, .17);
     --get: #58a6ff; --post: #3fb950; --put: #e3b341; --delete: #ff6b63;
+    --invalid: #b794f6; --invalid-bg: rgba(167, 139, 250, .16);
     --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
     color-scheme: dark;
   }
@@ -49,6 +52,7 @@
   --pass: #3fb950; --pass-bg: rgba(63, 185, 80, .16);
   --fail: #ff6b63; --fail-bg: rgba(248, 81, 73, .17);
   --get: #58a6ff; --post: #3fb950; --put: #e3b341; --delete: #ff6b63;
+  --invalid: #b794f6; --invalid-bg: rgba(167, 139, 250, .16);
   --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
   color-scheme: dark;
 }
@@ -445,3 +449,21 @@ pre.code .hl { display: inline-block; width: 100%; background: rgba(248, 81, 73,
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 .feed.no-anim .row { animation: none; }
+
+/* ----------------------------- invalid-input badge + legend ----------------------------- */
+.badge-invalid {
+  display: inline-block; font: 700 .72rem var(--font); letter-spacing: .02em; white-space: nowrap;
+  color: var(--invalid); background: var(--invalid-bg); border: 1px solid color-mix(in srgb, var(--invalid) 40%, transparent);
+  border-radius: 999px; padding: 1px 8px; margin-right: 8px; vertical-align: 1px;
+}
+.cell-badge { margin-top: 4px; }
+.legend {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; margin: -6px 4px -4px;
+  font-size: .82rem; color: var(--text-2);
+}
+.legend > span { white-space: nowrap; }
+.legend .pill { padding: 2px 8px; font-size: .7rem; margin-right: 4px; }
+.legend .badge-invalid { margin-right: 4px; }
+.bug-hint { margin: 8px 2px 0; font-size: .8rem; color: var(--muted); }
+.bug-hint:empty { display: none; }
+.invalid-note { background: var(--invalid-bg); border-left: 3px solid var(--invalid); border-radius: 8px; padding: 10px 12px; }

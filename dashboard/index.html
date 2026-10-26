@@ -74,6 +74,7 @@
         </label>
       </div>
       <select id="bugType" aria-label="Which bug to plant"></select>
+      <p id="bugHint" class="bug-hint"></p>
     </section>
 
     <h2 class="section-label">Test suites <span class="muted">(Postman folders)</span></h2>
@@ -114,6 +115,13 @@
       <div class="card stat"><small>Total</small><b id="statTotal">0</b><span class="sub" id="statAssert">0 assertions</span></div>
       <div class="card stat"><small>Duration</small><b id="statTime">-</b><span class="sub" id="statAvg">avg response -</span></div>
     </section>
+
+    <!-- One-line legend for the result badges -->
+    <p class="legend">
+      <span><span class="pill pass">PASS</span> behaved as expected</span>
+      <span><span class="pill fail">FAIL</span> the test caught a problem</span>
+      <span><span class="badge-invalid">Invalid input → rejected</span> error scenario: passes when the API correctly refuses it</span>
+    </p>
 
     <!-- Live feed + response-time chart -->
     <section class="live-row">

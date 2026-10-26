@@ -101,12 +101,14 @@ def t_echo(body):
 # Test case definitions
 # --------------------------------------------------------------------------
 # Each case: id, name, method, path, body, auth ("token" | "wrong" | "none"),
-#            expected (human text), tests (JS lines), pre (pre-request JS lines)
+#            expected (human text), tests (JS lines), pre (pre-request JS lines),
+#            invalid (True = error scenario: deliberately invalid input that
+#                     PASSES when the API correctly rejects it)
 
 def case(cid, name, method, path, expected, tests, body=None, auth="none",
-         pre=None, about=""):
+         pre=None, about="", invalid=False):
     return dict(id=cid, name=name, method=method, path=path, body=body, auth=auth,
-                expected=expected, tests=tests, pre=pre or [], about=about)
+                expected=expected, tests=tests, pre=pre or [], about=about, invalid=invalid)
 
 
 def valid_body(usn, **over):
@@ -203,6 +205,8 @@ NEGATIVE = [
     case("NEG-08", "Non-numeric id in the URL", "GET", "/students/abc", "422, error on 'student_id'",
          t_status(422) + t_field_error("student_id"), about="Path ids must be integers."),
 ]
+for c in NEGATIVE:          # every Negative test sends invalid input on purpose
+    c["invalid"] = True
 
 # ---------------- Boundary Value Analysis ----------------
 def bva(cid, label, field, value, valid, usn):
@@ -214,6 +218,7 @@ def bva(cid, label, field, value, valid, usn):
         tests = t_status(422) + t_field_error(field) + t_not_created()
     shown = f'"{value}" ({len(value)} chars)' if field == "name" else value
     return case(cid, label, "POST", "/students", expected, tests, body=body, auth="token",
+                invalid=not valid,
                 about=f"Boundary value: {field} = {shown}. "
                       f"{'On the edge but inside' if valid else 'Just outside'} the valid range.")
 
@@ -237,15 +242,16 @@ BOUNDARY = [
 AUTH = [
     case("AUTH-01", "Create without a token", "POST", "/students", "401 Unauthorized",
          t_status(401) + t_detail("Missing bearer token"), body=valid_body("1BM23AD401"),
-         auth="none", about="No Authorization header at all."),
+         auth="none", invalid=True, about="No Authorization header at all."),
     case("AUTH-02", "Create with a wrong token", "POST", "/students", "403 Forbidden",
          t_status(403) + t_detail("Invalid token"), body=valid_body("1BM23AD402"),
-         auth="wrong", about="Header present but the token is wrong."),
+         auth="wrong", invalid=True, about="Header present but the token is wrong."),
     case("AUTH-03", "Update without a token", "PUT", "/students/1", "401 Unauthorized",
          t_status(401) + t_detail("Missing bearer token"), body=valid_body("1BM23AD001"),
-         auth="none", about="PUT is protected too."),
+         auth="none", invalid=True, about="PUT is protected too."),
     case("AUTH-04", "Delete with a wrong token", "DELETE", "/students/1", "403 Forbidden",
-         t_status(403) + t_detail("Invalid token"), auth="wrong", about="DELETE is protected too."),
+         t_status(403) + t_detail("Invalid token"), auth="wrong", invalid=True,
+         about="DELETE is protected too."),
     case("AUTH-05", "Delete with a valid token", "DELETE", "/students/3", "200 OK",
          t_status(200), auth="token", about="The right token is accepted."),
     case("AUTH-06", "Read endpoints are public", "GET", "/students", "200 OK without a token",
@@ -332,6 +338,20 @@ DATA_DRIVEN = [
          about="One request, many inputs: Newman runs it once per CSV row (-d students.csv)."),
 ]
 
+# Which tests catch each planted bug (verified by running every bug).
+# The dashboard shows the same list under the Bug Mode dropdown.
+PLANTED_BUGS = {
+    "marks_over_100": ("Marks above 100 accepted", "BVA-08, DD-11"),
+    "wrong_status": ("POST returns 200 instead of 201",
+                     "POS-04, BVA-02/03/06/07/10/11, CHN-01, DD-01…DD-07 (every create)"),
+    "auth_bypass": ("A wrong bearer token is accepted", "AUTH-02, AUTH-04"),
+    "name_length": ("Names over 50 characters accepted", "BVA-12"),
+    "duplicate_usn": ("Duplicate USN allowed (no 409)", "NEG-04, DD-15"),
+    "slow_response": ("GET /students takes ~800 ms", "POS-02, AUTH-06 (response-time checks)"),
+    "wrong_body": ("GET /students/{id} returns `student_age` instead of `age`", "POS-03, CHN-02 (JSON schema checks)"),
+    "all": ("All bugs at once", "All of the above"),
+}
+
 FOLDERS = [
     ("Positive", "Happy path: valid requests return the right data and status codes.", POSITIVE),
     ("Negative", "Invalid ids, duplicates and bad data are rejected with the right errors.", NEGATIVE),
@@ -362,6 +382,9 @@ def build_item(c):
         },
         "description": f"{c['about']}\n\n**Expected:** {c['expected']}",
     }
+    if c["invalid"]:
+        # The dashboard reads this line to show the "Invalid input → rejected" badge
+        request["description"] += "\n\n**Scenario:** Invalid input → rejected"
     if c["body"] is not None:
         raw = c["body"] if isinstance(c["body"], str) else json.dumps(c["body"], indent=4)
         request["body"] = {"mode": "raw", "raw": raw, "options": {"raw": {"language": "json"}}}
@@ -456,24 +479,33 @@ def build_test_cases_md(results=None):
     total = 0
     for folder, description, cases in FOLDERS:
         lines += [f"## {folder}", "", description, ""]
-        lines += ["| ID | Type | Test case | Input | Expected | Actual | Pass/Fail |",
-                  "|----|------|-----------|-------|----------|--------|-----------|"]
+        lines += ["| ID | Type | Scenario | Test case | Input | Expected | Actual | Pass/Fail |",
+                  "|----|------|----------|-----------|-------|----------|--------|-----------|"]
         rows = []
         if folder == "Data-Driven":
             with open(CSV_PATH, newline="") as f:
                 for r in csv.DictReader(f):
                     rows.append((r["case_id"], r["scenario"],
                                  f"name={json.dumps(r['name'])}, usn={r['usn']}, age={r['age']}, marks={r['marks']}",
-                                 r["expected_status"]))
+                                 r["expected_status"], int(r["expected_status"]) >= 400))
         else:
-            rows = [(c["id"], c["name"], md_input(c), c["expected"]) for c in cases]
-        for cid, name, inp, expected in rows:
+            rows = [(c["id"], c["name"], md_input(c), c["expected"], c["invalid"]) for c in cases]
+        for cid, name, inp, expected, invalid in rows:
             actual, passed = results.get(cid, ("-", None))
             verdict = "-" if passed is None else ("✅ PASS" if passed else "❌ FAIL")
-            lines.append(f"| {cid} | {folder} | {name} | {inp} | {expected} | {actual} | {verdict} |")
+            scenario = "⛔ Invalid input → rejected" if invalid else "Valid input"
+            lines.append(f"| {cid} | {folder} | {scenario} | {name} | {inp} | {expected} | {actual} | {verdict} |")
             total += 1
         lines.append("")
     lines.insert(4, f"**Total: {total} test cases in 6 suites.**\n")
+    lines.insert(5, "**⛔ Invalid input → rejected** marks an error scenario: the request is invalid on "
+                    "purpose, and the test PASSES when the API correctly rejects it.\n")
+    lines += ["## Planted bugs (Bug Mode)", "",
+              "Each bug is one marked line in `app/student_api.py` (search for `<-- BUG`). "
+              "The tests listed are the ones that fail when it is switched on; every other test still passes.", "",
+              "| Bug | What goes wrong | Caught by |", "|-----|-----------------|-----------|"]
+    for key, (label, caught) in PLANTED_BUGS.items():
+        lines.append(f"| `{key}` | {label} | {caught} |")
     return "\n".join(lines) + "\n"
 
 

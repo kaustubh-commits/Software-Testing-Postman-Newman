@@ -32,6 +32,9 @@
 2. Click **Run All Suites**. While it runs:
    - Point at the **live feed**: "Each row is one request finishing. PASS/FAIL, method, endpoint and time."
    - Point at the grey **setup** lines: "Each suite resets the data first, so the tests are independent. This is a setup step, not a test."
+   - Point at a purple **Invalid input → rejected** badge (any Negative row) and at the legend above the feed:
+     "These are *error scenarios*. We send bad data on purpose, like an unknown id or a wrong token.
+     The test **passes** because the API correctly **rejects** it with the right error code. Green here means the API said no, and that's what we wanted."
    - Point at the **counters, donut and response-time chart** filling in.
 3. **Drill into a test.** Click **BVA-08 Marks 101**:
    "Boundary Value Analysis: 100 is the maximum, so we test 101 just outside. The API must answer **422**.
@@ -41,21 +44,34 @@
 5. Click a **Data-Driven** row: "One request and 15 rows of `students.csv`. Newman runs it once per row (`-d students.csv`), and each row has its own expected status."
 6. Scroll to the **Test case table**: "ID, type, input, expected, actual and result, all filled from this run. It exports to CSV for our documentation." Hand over.
 
-## Presenter 3: Catching a bug + reports + CI (≈3 min) · *Utsav*
+## Presenter 3: Catching bugs + reports + CI (≈3 min) · *Utsav*
 
 1. "Passing tests aren't impressive if they can't fail. Let's plant a real bug."
-   Turn **Bug Mode ON** (*Marks above 100 accepted*). Point at the red banner.
+   Turn **Bug Mode ON** (*Marks above 100 accepted*). Point at the red banner, and at the
+   **Caught by** line under the dropdown, which predicts which tests should fail.
    "The developer accidentally changed the marks limit, so the API now accepts 101 marks."
 2. Run the **Boundary** suite. "11 pass, but **BVA-08 fails**: we expected 422, and the API returned 201 Created."
-   Open the red row. The failing `pm.test()` lines are highlighted in red. "The test tells us exactly what broke."
-   (Optional: also run **Data-Driven**, where **DD-11** catches the same bug.)
-3. Turn **Bug Mode OFF**, run Boundary again, and it is green again. "That's a regression test."
-4. Click **HTML report**: "Newman's *htmlextra* reporter writes one report per suite. This index links them.
+   Open the red row. The failing `pm.test()` lines are highlighted in red. "The test tells us exactly what broke.
+   Notice it's an *invalid input* test that failed: the API should have rejected the input but accepted it."
+3. **Each suite guards something different (≈45 s).** Pick one or two more bugs from the dropdown and run the suite that catches each one:
+
+   | Bug | Run | What fails |
+   |-----|-----|------------|
+   | Wrong token accepted | Auth | AUTH-02, AUTH-04: expected 403, got success |
+   | Duplicate USN allowed | Negative | NEG-04: expected 409 Conflict |
+   | Names over 50 chars accepted | Boundary | BVA-12: the 51-char name |
+   | GET /students takes 800 ms | Positive | POS-02: response-time check (< 500 ms) |
+   | GET by id renames 'age' | Positive | POS-03: JSON schema check |
+
+4. **The big finish:** choose **ALL bugs at once** → **Run All Suites**. The donut goes about half red (26 of 53 fail),
+   and every suite card shows failures. "Seven different defects, and every single one was caught automatically."
+5. Turn **Bug Mode OFF** and **Run All** again: 53/53 green. "That's a regression test."
+6. Click **HTML report**: "Newman's *htmlextra* reporter writes one report per suite. This index links them.
    It shows every request, response and assertion, ready to attach to a test report."
-5. **CI (30 s).** Show `run_tests.sh` or the README command:
+7. **CI (30 s).** Show `run_tests.sh` or the README command:
    "In a CI pipeline like GitHub Actions or Jenkins, this one `newman run` command runs on every commit.
    Newman exits with a non-zero code if any test fails, so a broken API never gets deployed."
-6. **Close.** "Postman to design the tests, Newman to automate them, and the same collection everywhere: the app, CLI, CI and this dashboard."
+8. **Close.** "Postman to design the tests, Newman to automate them, and the same collection everywhere: the app, CLI, CI and this dashboard."
 
 ---
 
@@ -93,5 +109,9 @@
 
 **Bonus:**
 - *Why reset before every suite?* So each suite is independent and repeatable, and the order doesn't matter.
-- *What is the planted bug, technically?* In `student_api.py` the marks validator's upper limit becomes 150 when bug mode is on. It is one line, and the dashboard toggles it at runtime.
+- *What are the planted bugs, technically?* Seven one-line defects in `student_api.py`, each marked `# <-- BUG: <name>`
+  (e.g. the marks validator's upper limit becomes 150, the token check is skipped for a wrong token, `/students` sleeps 800 ms).
+  The dashboard toggles them at runtime. "All bugs" switches on every one.
+- *Why does an "Invalid input → rejected" test show PASS?* It is a negative test: the expected result *is* an error (401/403/404/409/422).
+  It passes when the API returns that error, and it fails if the API wrongly accepts the bad input.
 - *Limitations of Postman/Newman?* They are not meant for heavy load testing (use JMeter or k6 for that) and not for UI testing. Tests are JavaScript in JSON, so larger suites need good organisation.

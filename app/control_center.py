@@ -15,6 +15,7 @@ How a run works:
 import asyncio
 import csv
 import html
+import importlib.util
 import json
 import os
 import re
@@ -44,6 +45,19 @@ BASE_URL = f"http://127.0.0.1:{APP_PORT}"
 
 SUITE_ORDER = ["Positive", "Negative", "Boundary", "Auth", "Chaining", "Data-Driven"]
 DATA_FILES = {"Data-Driven": CSV_FILE}      # suites that need `-d <csv>`
+
+
+def load_planted_bugs() -> dict:
+    """{bug: (label, caught_by)} from tools/build_collection.py, the single place
+    where the test cases (and which tests catch which bug) are defined."""
+    spec = importlib.util.spec_from_file_location(
+        "build_collection", os.path.join(ROOT, "tools", "build_collection.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.PLANTED_BUGS
+
+
+PLANTED_BUGS = load_planted_bugs()
 
 
 def load_csv_rows():
@@ -104,11 +118,15 @@ def enrich(event: dict, suite: str, csv_rows: list) -> dict:
     match = re.search(r"\*\*Expected:\*\*\s*(.+)", description)
     expected = match.group(1).strip() if match else ""
     name = event["name"]
+    # Error scenario (invalid input that should be rejected)? The collection marks it
+    # with a "**Scenario:** Invalid input" line; CSV rows use their expected_status.
+    invalid = "**Scenario:** Invalid input" in description
     if suite in DATA_FILES and event["kind"] == "test":
         row = csv_rows[event["iteration"] - 1] if event["iteration"] <= len(csv_rows) else {}
         case_id = row.get("case_id", f"DD-{event['iteration']:02d}")
         name = f"{row.get('scenario', name)}"
         expected = row.get("expected_status", expected)
+        invalid = int(row.get("expected_status") or 0) >= 400
     elif event["kind"] == "setup":
         case_id = "SETUP"
     else:
@@ -118,7 +136,7 @@ def enrich(event: dict, suite: str, csv_rows: list) -> dict:
         actual = "No response: " + event["networkError"]
     failed = [a for a in event.get("assertions", []) if not a["passed"] and not a["skipped"]]
     event.update(caseId=case_id, title=name, suite=suite, expected=expected, actual=actual,
-                 failedAssertions=len(failed))
+                 failedAssertions=len(failed), invalidInput=invalid)
     return event
 
 
@@ -307,7 +325,8 @@ async def stream(run_id: str):
 
 @router.get("/bug-mode")
 def get_bug_mode():
-    return {**student_api.BUG_MODE, "types": student_api.BUG_TYPES}
+    return {**student_api.BUG_MODE, "types": student_api.BUG_TYPES,
+            "caughtBy": {k: v[1] for k, v in PLANTED_BUGS.items()}}
 
 
 @router.post("/bug-mode")
@@ -317,7 +336,8 @@ def set_bug_mode(req: BugRequest):
             raise HTTPException(422, f"Unknown bug type {req.type}")
         student_api.BUG_MODE["type"] = req.type
     student_api.BUG_MODE["enabled"] = req.enabled
-    return {**student_api.BUG_MODE, "types": student_api.BUG_TYPES}
+    return {**student_api.BUG_MODE, "types": student_api.BUG_TYPES,
+            "caughtBy": {k: v[1] for k, v in PLANTED_BUGS.items()}}
 
 
 @router.get("/history")

@@ -421,7 +421,7 @@
                 "9999"
               ]
             },
-            "description": "Unknown ids return 404.\n\n**Expected:** 404 Not Found"
+            "description": "Unknown ids return 404.\n\n**Expected:** 404 Not Found\n\n**Scenario:** Invalid input \u2192 rejected"
           },
           "response": []
         },
@@ -465,7 +465,7 @@
                 "9999"
               ]
             },
-            "description": "PUT on an unknown id returns 404.\n\n**Expected:** 404 Not Found",
+            "description": "PUT on an unknown id returns 404.\n\n**Expected:** 404 Not Found\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD300\",\n    \"age\": 20,\n    \"marks\": 75\n}",
@@ -514,7 +514,7 @@
                 "9999"
               ]
             },
-            "description": "DELETE on an unknown id returns 404.\n\n**Expected:** 404 Not Found"
+            "description": "DELETE on an unknown id returns 404.\n\n**Expected:** 404 Not Found\n\n**Scenario:** Invalid input \u2192 rejected"
           },
           "response": []
         },
@@ -557,7 +557,7 @@
                 "students"
               ]
             },
-            "description": "1BM23AD001 already belongs to a seed student.\n\n**Expected:** 409 Conflict",
+            "description": "1BM23AD001 already belongs to a seed student.\n\n**Expected:** 409 Conflict\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD001\",\n    \"age\": 20,\n    \"marks\": 75\n}",
@@ -615,7 +615,7 @@
                 "students"
               ]
             },
-            "description": "USN must look like 1BM23AD028.\n\n**Expected:** 422, error on 'usn'",
+            "description": "USN must look like 1BM23AD028.\n\n**Expected:** 422, error on 'usn'\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"ABC123\",\n    \"age\": 20,\n    \"marks\": 75\n}",
@@ -670,7 +670,7 @@
                 "students"
               ]
             },
-            "description": "All four fields are required.\n\n**Expected:** 422, error on 'marks'",
+            "description": "All four fields are required.\n\n**Expected:** 422, error on 'marks'\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"No Marks\",\n    \"usn\": \"1BM23AD301\",\n    \"age\": 20\n}",
@@ -725,7 +725,7 @@
                 "students"
               ]
             },
-            "description": "age must be an integer.\n\n**Expected:** 422, error on 'age'",
+            "description": "age must be an integer.\n\n**Expected:** 422, error on 'age'\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Wrong Type\",\n    \"usn\": \"1BM23AD302\",\n    \"age\": \"twenty\",\n    \"marks\": 70\n}",
@@ -772,7 +772,7 @@
                 "abc"
               ]
             },
-            "description": "Path ids must be integers.\n\n**Expected:** 422, error on 'student_id'"
+            "description": "Path ids must be integers.\n\n**Expected:** 422, error on 'student_id'\n\n**Scenario:** Invalid input \u2192 rejected"
           },
           "response": []
         }
@@ -846,7 +846,7 @@
                 "students"
               ]
             },
-            "description": "Boundary value: age = 16. Just outside the valid range.\n\n**Expected:** 422, error on 'age'",
+            "description": "Boundary value: age = 16. Just outside the valid range.\n\n**Expected:** 422, error on 'age'\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD101\",\n    \"age\": 16,\n    \"marks\": 75\n}",
@@ -1010,7 +1010,7 @@
                 "students"
               ]
             },
-            "description": "Boundary value: age = 31. Just outside the valid range.\n\n**Expected:** 422, error on 'age'",
+            "description": "Boundary value: age = 31. Just outside the valid range.\n\n**Expected:** 422, error on 'age'\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD104\",\n    \"age\": 31,\n    \"marks\": 75\n}",
@@ -1068,7 +1068,7 @@
                 "students"
               ]
             },
-            "description": "Boundary value: marks = -1. Just outside the valid range.\n\n**Expected:** 422, error on 'marks'",
+            "description": "Boundary value: marks = -1. Just outside the valid range.\n\n**Expected:** 422, error on 'marks'\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD105\",\n    \"age\": 20,\n    \"marks\": -1\n}",
@@ -1232,7 +1232,7 @@
                 "students"
               ]
             },
-            "description": "Boundary value: marks = 101. Just outside the valid range.\n\n**Expected:** 422, error on 'marks'",
+            "description": "Boundary value: marks = 101. Just outside the valid range.\n\n**Expected:** 422, error on 'marks'\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD108\",\n    \"age\": 20,\n    \"marks\": 101\n}",
@@ -1290,7 +1290,7 @@
                 "students"
               ]
             },
-            "description": "Boundary value: name = \"\" (0 chars). Just outside the valid range.\n\n**Expected:** 422, error on 'name'",
+            "description": "Boundary value: name = \"\" (0 chars). Just outside the valid range.\n\n**Expected:** 422, error on 'name'\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"\",\n    \"usn\": \"1BM23AD109\",\n    \"age\": 20,\n    \"marks\": 75\n}",
@@ -1454,7 +1454,7 @@
                 "students"
               ]
             },
-            "description": "Boundary value: name = \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\" (51 chars). Just outside the valid range.\n\n**Expected:** 422, error on 'name'",
+            "description": "Boundary value: name = \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\" (51 chars). Just outside the valid range.\n\n**Expected:** 422, error on 'name'\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\n    \"usn\": \"1BM23AD112\",\n    \"age\": 20,\n    \"marks\": 75\n}",
@@ -1527,7 +1527,7 @@
                 "students"
               ]
             },
-            "description": "No Authorization header at all.\n\n**Expected:** 401 Unauthorized",
+            "description": "No Authorization header at all.\n\n**Expected:** 401 Unauthorized\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD401\",\n    \"age\": 20,\n    \"marks\": 75\n}",
@@ -1579,7 +1579,7 @@
                 "students"
               ]
             },
-            "description": "Header present but the token is wrong.\n\n**Expected:** 403 Forbidden",
+            "description": "Header present but the token is wrong.\n\n**Expected:** 403 Forbidden\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD402\",\n    \"age\": 20,\n    \"marks\": 75\n}",
@@ -1628,7 +1628,7 @@
                 "1"
               ]
             },
-            "description": "PUT is protected too.\n\n**Expected:** 401 Unauthorized",
+            "description": "PUT is protected too.\n\n**Expected:** 401 Unauthorized\n\n**Scenario:** Invalid input \u2192 rejected",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"name\": \"Test Student\",\n    \"usn\": \"1BM23AD001\",\n    \"age\": 20,\n    \"marks\": 75\n}",
@@ -1677,7 +1677,7 @@
                 "1"
               ]
             },
-            "description": "DELETE is protected too.\n\n**Expected:** 403 Forbidden"
+            "description": "DELETE is protected too.\n\n**Expected:** 403 Forbidden\n\n**Scenario:** Invalid input \u2192 rejected"
           },
           "response": []
         },

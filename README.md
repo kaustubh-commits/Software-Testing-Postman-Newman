@@ -44,9 +44,22 @@ Stop the server with **Ctrl+C**.
 
 - **Run All Suites**: runs all 6 folders one after another. Each suite card also has its own ▶ button.
 - **Pace**: *Presenter* adds a 250 ms pause between requests so the audience can follow. *Full speed* runs without pauses.
-- **Bug Mode**: plants a real defect in the running API. A red banner appears while it is on.
-  - *Marks above 100 accepted*: **BVA-08** and **DD-11** fail
-  - *POST returns 200, not 201*: every "create" test fails
+- **Bug Mode**: plants a real defect in the running API. A red banner appears while it is on, and the line
+  under the dropdown says which tests should catch it. Each bug is one line in `app/student_api.py` (search for `<-- BUG`).
+
+  | Bug | Fails |
+  |-----|-------|
+  | Marks above 100 accepted | BVA-08, DD-11 |
+  | POST returns 200, not 201 | every "create" test (15) |
+  | Wrong token accepted | AUTH-02, AUTH-04 |
+  | Names over 50 chars accepted | BVA-12 |
+  | Duplicate USN allowed | NEG-04, DD-15 |
+  | GET /students takes 800 ms | POS-02, AUTH-06 (response-time checks) |
+  | GET by id renames the 'age' field | POS-03, CHN-02 (JSON schema checks) |
+  | **ALL bugs at once** | all 26 of the above |
+- **Purple "Invalid input → rejected" badge**: marks error scenarios (Negative, invalid Boundary values,
+  Auth 401/403 checks and the invalid CSV rows). They send bad input on purpose and **PASS when the API correctly rejects it**.
+  A legend above the feed explains PASS / FAIL / this badge.
 - **How it works**: the 6-step pipeline lights up as Newman processes each request.
 - **Live results**: click any row to open the request, response, every `pm.test()` result and the test script itself.
   The failing lines of the script are highlighted.
@@ -61,8 +74,9 @@ Stop the server with **Ctrl+C**.
 ```bash
 ./run_tests.sh                 # all suites with the Newman CLI
 ./run_tests.sh Boundary Auth   # only some suites
-./run_bug_demo.sh              # bug mode ON → Boundary suite → bug mode OFF
-./run_bug_demo.sh wrong_status # the other planted bug
+./run_bug_demo.sh              # bug mode ON → the suite that catches it → bug mode OFF
+./run_bug_demo.sh auth_bypass  # any bug: wrong_status, auth_bypass, name_length,
+                               #   duplicate_usn, slow_response, wrong_body, all
 ```
 
 Reports are saved to `reports/cli/<timestamp>/index.html`. If the server isn't running, the scripts start a temporary one.

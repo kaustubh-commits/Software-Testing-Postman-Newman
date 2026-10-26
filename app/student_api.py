@@ -12,11 +12,15 @@ so that every rule can be explained in the viva:
 
 It also has a "planted bug" mode (BUG_MODE) that the dashboard can switch on
 at runtime, so we can show the tests catching a real defect live.
+Every bug lives in ONE place, marked with a  "# <-- BUG: <name>"  comment.
+Search this file for "<-- BUG" to find them all.
 """
 
+import time
 from typing import Dict, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
 router = APIRouter()
@@ -31,16 +35,28 @@ USN_PATTERN = r"^[1-4][A-Z]{2}\d{2}[A-Z]{2}\d{3}$"   # e.g. 1BM23AD028
 # Planted bugs that can be toggled from the dashboard:
 #   marks_over_100 -> marks above 100 (up to 150) are wrongly accepted
 #   wrong_status   -> POST /students returns 200 instead of 201
+#   auth_bypass    -> a wrong bearer token is accepted
+#   name_length    -> names longer than 50 characters are accepted
+#   duplicate_usn  -> the duplicate-USN check is skipped (no 409)
+#   slow_response  -> GET /students takes ~800 ms
+#   wrong_body     -> GET /students/{id} returns "student_age" instead of "age"
+#   all            -> every bug above at once
 BUG_TYPES = {
     "marks_over_100": "Marks above 100 accepted",
     "wrong_status": "POST returns 200, not 201",
+    "auth_bypass": "Wrong token accepted",
+    "name_length": "Names over 50 chars accepted",
+    "duplicate_usn": "Duplicate USN allowed",
+    "slow_response": "GET /students takes 800 ms",
+    "wrong_body": "GET by id renames the 'age' field",
+    "all": "ALL bugs at once",
 }
 BUG_MODE = {"enabled": False, "type": "marks_over_100"}
 
 
 def bug_active(bug_type: str) -> bool:
-    """True when bug mode is on AND the selected bug is `bug_type`."""
-    return BUG_MODE["enabled"] and BUG_MODE["type"] == bug_type
+    """True when bug mode is on AND the selected bug is `bug_type` (or "all")."""
+    return BUG_MODE["enabled"] and BUG_MODE["type"] in (bug_type, "all")
 
 
 # --------------------------------------------------------------------------
@@ -49,17 +65,25 @@ def bug_active(bug_type: str) -> bool:
 class StudentIn(BaseModel):
     """Body for POST / PUT. Pydantic turns rule violations into HTTP 422."""
 
-    name: str = Field(..., min_length=1, max_length=50, examples=["Kaustubh"])
+    name: str = Field(..., examples=["Kaustubh"])
     usn: str = Field(..., pattern=USN_PATTERN, examples=["1BM23AD028"])
     age: int = Field(..., ge=17, le=30, examples=[20])
     marks: int = Field(..., examples=[88])
 
-    # The marks rule is written by hand (not with ge/le) so that the planted
-    # bug lives in exactly one visible place.
+    # The name and marks rules are written by hand (not with max_length / le)
+    # so that their planted bugs live in exactly one visible place each.
+    @field_validator("name")
+    @classmethod
+    def check_name(cls, value: str) -> str:
+        upper_limit = 100 if bug_active("name_length") else 50       # <-- BUG: name_length
+        if not 1 <= len(value) <= upper_limit:
+            raise ValueError("name must be 1 to 50 characters")
+        return value
+
     @field_validator("marks")
     @classmethod
     def check_marks(cls, value: int) -> int:
-        upper_limit = 150 if bug_active("marks_over_100") else 100   # <-- BUG
+        upper_limit = 150 if bug_active("marks_over_100") else 100   # <-- BUG: marks_over_100
         if value < 0 or value > upper_limit:
             raise ValueError("marks must be between 0 and 100")
         return value
@@ -100,7 +124,10 @@ reset_store()
 def require_token(authorization: Optional[str] = Header(None)) -> None:
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing bearer token")
-    if authorization != f"Bearer {API_TOKEN}":
+    wrong_token = authorization != f"Bearer {API_TOKEN}"
+    if wrong_token and bug_active("auth_bypass"):                     # <-- BUG: auth_bypass
+        return                                                        #     wrong token accepted
+    if wrong_token:
         raise HTTPException(status_code=403, detail="Invalid token")
 
 
@@ -111,6 +138,8 @@ def find_or_404(student_id: int) -> dict:
 
 
 def ensure_unique_usn(usn: str, ignore_id: Optional[int] = None) -> None:
+    if bug_active("duplicate_usn"):                                   # <-- BUG: duplicate_usn
+        return                                                        #     check skipped, no 409
     for s in students.values():
         if s["usn"] == usn and s["id"] != ignore_id:
             raise HTTPException(status_code=409, detail=f"USN {usn} already exists")
@@ -134,12 +163,19 @@ def reset():
 
 @router.get("/students", response_model=list[Student], tags=["Students"])
 def list_students():
+    if bug_active("slow_response"):                                   # <-- BUG: slow_response
+        time.sleep(0.8)                                               #     800 ms delay
     return list(students.values())
 
 
 @router.get("/students/{student_id}", response_model=Student, tags=["Students"])
 def get_student(student_id: int):
-    return find_or_404(student_id)
+    student = find_or_404(student_id)
+    if bug_active("wrong_body"):                                      # <-- BUG: wrong_body
+        body = dict(student)                                          #     "age" renamed to
+        body["student_age"] = body.pop("age")                         #     "student_age"
+        return JSONResponse(body)
+    return student
 
 
 @router.post("/students", response_model=Student, status_code=201, tags=["Students"],
@@ -151,7 +187,7 @@ def create_student(body: StudentIn, response: Response):
     students[next_id] = student
     next_id += 1
     if bug_active("wrong_status"):
-        response.status_code = 200          # <-- BUG: should be 201 Created
+        response.status_code = 200                                    # <-- BUG: wrong_status (should be 201)
     return student
 
 
